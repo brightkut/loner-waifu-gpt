@@ -3,12 +3,17 @@ import {ChatBox} from "./components/ChatBox.jsx";
 import {useState, useRef} from "react";
 import {InputChat} from "./components/InputChat.jsx";
 import Model from "./components/Model.jsx";
+import {ChatOllama} from "@langchain/ollama";
 
 function App() {
     const [chats, setChat] = useState([]);
     const canvasContainerRef = useRef(null);
     const modelRef = useRef(null);
     const motions =['w-cute-nod06','w-happy-tilthead03', 'w-happy-forward01']
+    const llm = new ChatOllama({
+        baseUrl: "http://localhost:11434", // Default value
+        model: "qwen3:1.7b",
+    });
 
 
     function mockStreamAPI(message) {
@@ -21,8 +26,7 @@ function App() {
             "response!",
             "fafaf",
             "afadfadfafasfafaf",
-            "fasfasfsfasfsafasfasfaf",
-            "afasfafafasfasfasf "
+            "fasfasfsfasfsafasfasfaf"
         ];
 
         let i = 0;
@@ -57,6 +61,20 @@ function App() {
             return;
         }
 
+        const botId = Date.now(); // Unique ID for the bot's message
+        setChat(prev => [...prev, { id: botId, sender: "Miku", txtMsg: "" }]);
+
+        let botMessage = "";
+
+        const stream = await  llm.stream([["human", input.txtMsg]])
+
+        for await (const ch of stream){
+            botMessage += ch.content;
+            setChat(prev => prev.map(msg =>
+                msg.id === botId ? { ...msg, txtMsg: botMessage } : msg
+            ));
+        }
+
         const audio_link = "https://cdn.jsdelivr.net/gh/RaSan147/pixi-live2d-display@v1.0.3/playground/test.mp3";
         const volume = 1;
         const crossOrigin = "anonymous";
@@ -70,27 +88,6 @@ function App() {
             volume: volume,
             crossOrigin: crossOrigin,
         });
-
-        const botId = Date.now(); // Unique ID for the bot's message
-        setChat(prev => [...prev, { id: botId, sender: "Miku", txtMsg: "" }]);
-
-        const response = mockStreamAPI(input);
-
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder("utf-8");
-        let botMessage = "";
-
-        while (true) {
-            const { value, done } = await reader.read();
-            if (done) break;
-
-            const chunk = decoder.decode(value, { stream: true });
-            botMessage += chunk;
-
-            setChat(prev => prev.map(msg =>
-                msg.id === botId ? { ...msg, txtMsg: botMessage } : msg
-            ));
-        }
     }
 
     return (
