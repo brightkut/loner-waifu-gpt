@@ -10,6 +10,42 @@ function App() {
     const modelRef = useRef(null);
     const motions =['w-cute-nod06','w-happy-tilthead03', 'w-happy-forward01']
 
+
+    function mockStreamAPI(message) {
+        const chunks = [
+            "Hello",
+            ", this ",
+            "is a ",
+            "mock ",
+            "streaming ",
+            "response!",
+            "fafaf",
+            "afadfadfafasfafaf",
+            "fasfasfsfasfsafasfasfaf",
+            "afasfafafasfasfasf "
+        ];
+
+        let i = 0;
+
+        const stream = new ReadableStream({
+            pull(controller) {
+                if (i < chunks.length) {
+                    const chunk = chunks[i];
+                    controller.enqueue(new TextEncoder().encode(chunk));
+                    i++;
+                    // Delay next chunk to simulate streaming
+                    return new Promise(resolve => setTimeout(resolve, 300));
+                } else {
+                    controller.close();
+                }
+            }
+        });
+
+        return new Response(stream, {
+            headers: { "Content-Type": "text/plain" }
+        });
+    }
+
     async function handleAddChat(input){
         setChat(prevState => {
            return [...prevState, input]
@@ -34,6 +70,27 @@ function App() {
             volume: volume,
             crossOrigin: crossOrigin,
         });
+
+        const botId = Date.now(); // Unique ID for the bot's message
+        setChat(prev => [...prev, { id: botId, sender: "Miku", txtMsg: "" }]);
+
+        const response = mockStreamAPI(input);
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder("utf-8");
+        let botMessage = "";
+
+        while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value, { stream: true });
+            botMessage += chunk;
+
+            setChat(prev => prev.map(msg =>
+                msg.id === botId ? { ...msg, txtMsg: botMessage } : msg
+            ));
+        }
     }
 
     return (
@@ -59,7 +116,7 @@ function App() {
                                         </li>)
                                     }else {
                                         return (<li className="mb-3 flex justify-start pr-2">
-                                            <ChatBox txtMsg="Hi again!" sender="Miku" />
+                                            <ChatBox txtMsg={c.txtMsg} sender="Miku" />
                                         </li>)
                                     }
                                 })}

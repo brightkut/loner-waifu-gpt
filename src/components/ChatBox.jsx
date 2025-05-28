@@ -8,7 +8,7 @@ export  function ChatBox({txtMsg, sender}) {
 
            {/* Message bubble */}
            <div className="relative">
-               <p className="bg-gradient-to-br from-blue-600 to-blue-400 text-white p-4 rounded-xl shadow-md text-base md:text-lg leading-relaxed">
+               <p className="bg-gradient-to-br from-blue-600 to-blue-400 text-white p-4 rounded-xl shadow-md text-base md:text-lg leading-relaxed break-words whitespace-normal">
                    {txtMsg}
                </p>
 
