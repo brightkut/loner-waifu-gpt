@@ -3,18 +3,17 @@ import {ChatBox} from "./components/ChatBox.jsx";
 import {useState, useRef} from "react";
 import {InputChat} from "./components/InputChat.jsx";
 import Model from "./components/Model.jsx";
-import {Live2DModel} from "pixi-live2d-display-lipsyncpatch";
-import * as PIXI from "pixi.js";
 
 function App() {
     const [chats, setChat] = useState([]);
     const canvasContainerRef = useRef(null);
     const modelRef = useRef(null);
+    const motions =['w-cute-nod06','w-happy-tilthead03', 'w-happy-forward01']
 
-    async function handleAddChat(){
-        // setChat(prevState => {
-        //     // Add chat handling logic here
-        // });
+    async function handleAddChat(input){
+        setChat(prevState => {
+           return [...prevState, input]
+        });
 
        const model = modelRef.current;
         if (!model) {
@@ -26,7 +25,7 @@ function App() {
         const volume = 1;
         const crossOrigin = "anonymous";
 
-        const category_name = 'w-cute-nod06';
+        const category_name = motions[Math.floor(Math.random() * motions.length)];
         model.motion(category_name);
 
 
@@ -53,34 +52,17 @@ function App() {
                         {/* Scrollable message area */}
                         <div className="flex-1 overflow-y-auto p-2">
                             <ul>
-                                <li className="mb-3 flex justify-end pr-2">
-                                    <ChatBox txtMsg="Hi, I am Miku." sender="Miku" />
-                                </li>
-                                <li className="mb-3 flex justify-end pr-2">
-                                    <ChatBox txtMsg="Hi again!" sender="Miku" />
-                                </li>
-                                <li className="mb-3 flex justify-end pr-2">
-                                    <ChatBox txtMsg="Hi again!" sender="Miku" />
-                                </li>
-                                <li className="mb-3 flex justify-end pr-2">
-                                    <ChatBox txtMsg="Hi again!" sender="Miku" />
-                                </li>
-                                <li className="mb-3 flex justify-end pr-2">
-                                    <ChatBox txtMsg="Hi again!" sender="Miku" />
-                                </li>
-                                <li className="mb-3 flex justify-end pr-2">
-                                    <ChatBox txtMsg="Hi again!" sender="Miku" />
-                                </li>
-                                <li className="mb-3 flex justify-end pr-2">
-                                    <ChatBox txtMsg="Hi again!" sender="Miku" />
-                                </li>
-                                <li className="mb-3 flex justify-end pr-2">
-                                    <ChatBox txtMsg="Hi again!" sender="Miku" />
-                                </li>
-                                <li className="mb-3 flex justify-start pr-2">
-                                    <ChatBox txtMsg="Hi, I am Miku." sender="Miku" />
-                                </li>
-                                {/* more messages */}
+                                {chats.map((c)=>{
+                                    if (c.sender === 'Me'){
+                                        return (<li className="mb-3 flex justify-end pr-2">
+                                            <ChatBox txtMsg={c.txtMsg} sender={c.sender} />
+                                        </li>)
+                                    }else {
+                                        return (<li className="mb-3 flex justify-start pr-2">
+                                            <ChatBox txtMsg="Hi again!" sender="Miku" />
+                                        </li>)
+                                    }
+                                })}
                             </ul>
                         </div>
 
