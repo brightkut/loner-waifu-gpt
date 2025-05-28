@@ -1,6 +1,6 @@
 import './App.css'
 import {ChatBox} from "./components/ChatBox.jsx";
-import {useState, useRef} from "react";
+import {useState, useRef, useEffect} from "react";
 import {InputChat} from "./components/InputChat.jsx";
 import Model from "./components/Model.jsx";
 import {ChatOllama} from "@langchain/ollama";
@@ -9,46 +9,16 @@ function App() {
     const [chats, setChat] = useState([]);
     const canvasContainerRef = useRef(null);
     const modelRef = useRef(null);
+    const messagesEndRef = useRef(null);
     const motions =['w-cute-nod06','w-happy-tilthead03', 'w-happy-forward01']
     const llm = new ChatOllama({
         baseUrl: "http://localhost:11434", // Default value
         model: "qwen3:1.7b",
     });
 
-
-    function mockStreamAPI(message) {
-        const chunks = [
-            "Hello",
-            ", this ",
-            "is a ",
-            "mock ",
-            "streaming ",
-            "response!",
-            "fafaf",
-            "afadfadfafasfafaf",
-            "fasfasfsfasfsafasfasfaf"
-        ];
-
-        let i = 0;
-
-        const stream = new ReadableStream({
-            pull(controller) {
-                if (i < chunks.length) {
-                    const chunk = chunks[i];
-                    controller.enqueue(new TextEncoder().encode(chunk));
-                    i++;
-                    // Delay next chunk to simulate streaming
-                    return new Promise(resolve => setTimeout(resolve, 300));
-                } else {
-                    controller.close();
-                }
-            }
-        });
-
-        return new Response(stream, {
-            headers: { "Content-Type": "text/plain" }
-        });
-    }
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [chats]);
 
     async function handleAddChat(input){
         setChat(prevState => {
@@ -81,9 +51,6 @@ function App() {
 
         const category_name = motions[Math.floor(Math.random() * motions.length)];
         model.motion(category_name);
-
-
-        // ✅ This should work if the model is already initialized and attached to PIXI
         model.speak(audio_link, {
             volume: volume,
             crossOrigin: crossOrigin,
@@ -106,18 +73,13 @@ function App() {
                         {/* Scrollable message area */}
                         <div className="flex-1 overflow-y-auto p-2">
                             <ul>
-                                {chats.map((c)=>{
-                                    if (c.sender === 'Me'){
-                                        return (<li className="mb-3 flex justify-end pr-2">
-                                            <ChatBox txtMsg={c.txtMsg} sender={c.sender} />
-                                        </li>)
-                                    }else {
-                                        return (<li className="mb-3 flex justify-start pr-2">
-                                            <ChatBox txtMsg={c.txtMsg} sender="Miku" />
-                                        </li>)
-                                    }
-                                })}
+                                {chats.map((c, idx) => (
+                                    <li key={idx} className={`mb-3 flex ${c.sender === 'Me' ? 'justify-end' : 'justify-start'} pr-2`}>
+                                        <ChatBox txtMsg={c.txtMsg} sender={c.sender === 'Me' ? 'Me' : 'Miku'} />
+                                    </li>
+                                ))}
                             </ul>
+                            <div ref={messagesEndRef} />
                         </div>
 
                         {/* Fixed input area */}
