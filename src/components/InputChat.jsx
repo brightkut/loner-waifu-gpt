@@ -1,6 +1,6 @@
 import {SendHorizonal} from "lucide-react";
 
-export function InputChat(){
+export function InputChat({handleAdd}){
     return (
         <div className="bg-white rounded-b-md px-4 py-2 flex items-center gap-2 shadow-md">
             <input
@@ -11,6 +11,7 @@ export function InputChat(){
             <button
                 type="submit"
                 className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-md transition duration-200"
+                onClick={handleAdd}
             >
                 <SendHorizonal/>
             </button>

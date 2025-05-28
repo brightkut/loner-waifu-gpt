@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import * as PIXI from 'pixi.js';
 import { Live2DModel } from 'pixi-live2d-display-lipsyncpatch';
 
-const Model = ({ containerRef }) => {
+const Model = ({ containerRef , modelRef}) => {
     const canvasRef = useRef(null);
 
     useEffect(() => {
@@ -42,6 +42,8 @@ const Model = ({ containerRef }) => {
 
             const model = await Live2DModel.from('/model/21miku_idol_3.0_f_t02.model3.json', {
                 ticker: PIXI.Ticker.shared,
+                autoInteract: false,
+                autoUpdate: true
             });
 
             let scale = 1.5
@@ -59,16 +61,20 @@ const Model = ({ containerRef }) => {
 
             app.stage.addChild(model);
 
-            model.on('hit', (hitAreas) => {
-                if (hitAreas.includes('body')) {
-                    model.motion('tap_body');
-                }
-            });
+            const category_name = 'w-cute-wink01'
+            model.motion(category_name);
+
+            if (modelRef) {
+                modelRef.current = model;
+            }
 
             // Cleanup function
             return () => {
                 window.removeEventListener('resize', handleResize);
                 app.destroy(true, true);
+                if (modelRef) {
+                    modelRef.current = null;
+                }
             };
         };
 
@@ -77,7 +83,7 @@ const Model = ({ containerRef }) => {
         return () => {
             // Cleanup will be handled by the returned function from init()
         };
-    }, [containerRef]);
+    }, [containerRef, modelRef]);
 
     return <canvas ref={canvasRef} className="w-full h-full" />;
 };

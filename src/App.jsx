@@ -3,14 +3,37 @@ import {ChatBox} from "./components/ChatBox.jsx";
 import {useState, useRef} from "react";
 import {InputChat} from "./components/InputChat.jsx";
 import Model from "./components/Model.jsx";
+import {Live2DModel} from "pixi-live2d-display-lipsyncpatch";
+import * as PIXI from "pixi.js";
 
 function App() {
     const [chats, setChat] = useState([]);
     const canvasContainerRef = useRef(null);
+    const modelRef = useRef(null);
 
-    function handleAddChat(){
-        setChat(prevState => {
-            // Add chat handling logic here
+    async function handleAddChat(){
+        // setChat(prevState => {
+        //     // Add chat handling logic here
+        // });
+
+       const model = modelRef.current;
+        if (!model) {
+            console.warn('Model not initialized yet.');
+            return;
+        }
+
+        const audio_link = "https://cdn.jsdelivr.net/gh/RaSan147/pixi-live2d-display@v1.0.3/playground/test.mp3";
+        const volume = 1;
+        const crossOrigin = "anonymous";
+
+        const category_name = 'w-cute-nod06';
+        model.motion(category_name);
+
+
+        // ✅ This should work if the model is already initialized and attached to PIXI
+        model.speak(audio_link, {
+            volume: volume,
+            crossOrigin: crossOrigin,
         });
     }
 
@@ -19,7 +42,7 @@ function App() {
             <div className="flex min-h-screen">
                 <div className="w-1/2">
                     <div id="canvas-container" ref={canvasContainerRef} className="h-screen">
-                        <Model containerRef={canvasContainerRef} />
+                        <Model containerRef={canvasContainerRef} modelRef={modelRef}/>
                     </div>
                 </div>
 
@@ -63,7 +86,7 @@ function App() {
 
                         {/* Fixed input area */}
                         <div className="border-t px-4 py-3 bg-white">
-                            <InputChat />
+                            <InputChat handleAdd={handleAddChat}/>
                         </div>
                     </div>
                 </div>
