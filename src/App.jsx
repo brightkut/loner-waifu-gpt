@@ -1,22 +1,26 @@
 import './App.css'
 import {ChatBox} from "./components/ChatBox.jsx";
-import {useState} from "react";
+import {useState, useRef} from "react";
 import {InputChat} from "./components/InputChat.jsx";
+import Model from "./components/Model.jsx";
 
 function App() {
-    const [chats , setChat] = useState([])
+    const [chats, setChat] = useState([]);
+    const canvasContainerRef = useRef(null);
 
     function handleAddChat(){
         setChat(prevState => {
-
-        })
+            // Add chat handling logic here
+        });
     }
 
     return (
         <div className="bg-[url('./assets/bg.jpg')] min-h-screen w-full bg-cover">
             <div className="flex min-h-screen">
                 <div className="w-1/2">
-                    <h1 className="">Hello</h1>
+                    <div id="canvas-container" ref={canvasContainerRef} className="h-screen">
+                        <Model containerRef={canvasContainerRef} />
+                    </div>
                 </div>
 
                 <div className="w-1/2 h-screen flex flex-col px-6">
