@@ -22,65 +22,61 @@ function App() {
     }, [chats]);
 
 
-    async function sendToTTS(dataArray) {
-        try {
-            const res = await axios.post("http://127.0.0.1:5000/tts", {data: dataArray});
-            console.log(res.data.path);
-            return res.data.path;
-        } catch (err) {
-            console.error("TTS error:", err);
-        }
-    }
+    async function handleAddChat(input) {
+        setChat(prev => [...prev, input]);
 
-    async function handleAddChat(input){
-        setChat(prevState => {
-           return [...prevState, input]
-        });
-
-       const model = modelRef.current;
+        const model = modelRef.current;
         if (!model) {
             console.warn('Model not initialized yet.');
             return;
         }
 
-        const botId = Date.now(); // Unique ID for the bot's message
-        setChat(prev => [...prev, { id: botId, sender: "Miku", txtMsg: "" }]);
+        const botId = Date.now();
+        setChat(prev => [...prev, { id: botId, sender: "Miku", txtMsg: "..." }]);
+
+        const llm = new ChatOllama({
+            baseUrl: "http://localhost:11434",
+            model: "qwen3:1.7b",
+        });
+
+        const stream = await llm.stream([["human", input.txtMsg]]);
 
         let botMessage = "";
+        let botChunkMessage = []
 
-        const stream = await  llm.stream([["human", input.txtMsg]])
-
-        let data = []
-        for await (const ch of stream){
-            data.push(ch.content)
-            console.log(ch.content)
+        for await (const ch of stream) {
+            botMessage += " " + ch.content;
+            botChunkMessage.push(ch.content)
         }
-        console.log(data)
 
-        let path = await sendToTTS(data)
+        const res = await axios.post("http://localhost:8000/tts", { data: botMessage });
 
-        for (let i = 0; i < data.length; i++) {
-            const ch = data[i];
-            botMessage += ch;
+        let streamMessage = ""
 
-            setChat(prev =>
-                prev.map(msg =>
-                    msg.id === botId ? { ...msg, txtMsg: botMessage } : msg
-                )
-            );
+        const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-            const category_name = motions[Math.floor(Math.random() * motions.length)];
+        for await (const c of botChunkMessage){
+            streamMessage +=c
 
-            model.motion(category_name);
+            // Update chat
+            setChat(prev => prev.map(msg =>
+                msg.id === botId ? { ...msg, txtMsg: streamMessage } : msg
+            ));
+
+            await delay(300)
+
+            model.motion("w-cute-nod06");
 
             const volume = 1;
             const crossOrigin = "anonymous";
 
-            model.speak(path, {
+            model.speak("public/audio/sound.wav", {
                 volume: volume,
                 crossOrigin: crossOrigin,
             });
         }
+
+        await axios.delete("http://localhost:8000/audio", {});
     }
 
     return (
