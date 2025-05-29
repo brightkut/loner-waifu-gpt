@@ -1,0 +1,6 @@
+flask
+edge-tts
+pydub
+markdown2
+TTS
+pydantic

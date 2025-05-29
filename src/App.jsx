@@ -4,6 +4,7 @@ import {useState, useRef, useEffect} from "react";
 import {InputChat} from "./components/InputChat.jsx";
 import Model from "./components/Model.jsx";
 import {ChatOllama} from "@langchain/ollama";
+import axios from "axios";
 
 function App() {
     const [chats, setChat] = useState([]);
@@ -19,6 +20,17 @@ function App() {
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [chats]);
+
+
+    async function sendToTTS(dataArray) {
+        try {
+            const res = await axios.post("http://127.0.0.1:5000/tts", {data: dataArray});
+            console.log(res.data.path);
+            return res.data.path;
+        } catch (err) {
+            console.error("TTS error:", err);
+        }
+    }
 
     async function handleAddChat(input){
         setChat(prevState => {
@@ -38,23 +50,37 @@ function App() {
 
         const stream = await  llm.stream([["human", input.txtMsg]])
 
+        let data = []
         for await (const ch of stream){
-            botMessage += ch.content;
-            setChat(prev => prev.map(msg =>
-                msg.id === botId ? { ...msg, txtMsg: botMessage } : msg
-            ));
+            data.push(ch.content)
+            console.log(ch.content)
         }
+        console.log(data)
 
-        const audio_link = "https://cdn.jsdelivr.net/gh/RaSan147/pixi-live2d-display@v1.0.3/playground/test.mp3";
-        const volume = 1;
-        const crossOrigin = "anonymous";
+        let path = await sendToTTS(data)
 
-        const category_name = motions[Math.floor(Math.random() * motions.length)];
-        model.motion(category_name);
-        model.speak(audio_link, {
-            volume: volume,
-            crossOrigin: crossOrigin,
-        });
+        for (let i = 0; i < data.length; i++) {
+            const ch = data[i];
+            botMessage += ch;
+
+            setChat(prev =>
+                prev.map(msg =>
+                    msg.id === botId ? { ...msg, txtMsg: botMessage } : msg
+                )
+            );
+
+            const category_name = motions[Math.floor(Math.random() * motions.length)];
+
+            model.motion(category_name);
+
+            const volume = 1;
+            const crossOrigin = "anonymous";
+
+            model.speak(path, {
+                volume: volume,
+                crossOrigin: crossOrigin,
+            });
+        }
     }
 
     return (
