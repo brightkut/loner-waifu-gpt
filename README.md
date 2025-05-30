@@ -59,7 +59,7 @@ pip3 install torch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0
 3. Run `uvicorn main:app --reload` to start TTS service
 
 ## Video Sample
-[Sample](https://raw.githubusercontent.com/brightkut/loner-waifu-gpt/master/public/sample/sample.mov)
+https://github.com/user-attachments/assets/0bfb66ac-d442-4e9f-8091-258b2e5ad67a
 
 ## Library related
 [Pytorch](https://pytorch.org/get-started/locally/)
